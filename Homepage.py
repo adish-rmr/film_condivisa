@@ -57,13 +57,11 @@ if select:
     if st.button('Search'):
         for film in catalogue.films:
             if film.info['title'] == titolo['title']:
+                check = True
                 st.error('Film already proposed!')
-                check = True
-                break
             elif film.proposed_by == select and not film.watched:
-                st.error('You already proposed a film!')
                 check = True
-                break
+                st.error('You have already proposed a film!')
         if not check or catalogue.films == []:
             film = Film(titolo, select)
             catalogue.add_film(film)
