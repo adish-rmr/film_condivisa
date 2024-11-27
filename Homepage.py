@@ -58,13 +58,13 @@ if select:
         for film in catalogue.films:
             if film.info['title'] == titolo['title']:
                 st.error('Film already proposed!')
+                check = True
                 break
             elif film.proposed_by == select and not film.watched:
                 st.error('You already proposed a film!')
-                break
-            else:
                 check = True
-        if check or catalogue.films == []:
+                break
+        if not check or catalogue.films == []:
             film = Film(titolo, select)
             catalogue.add_film(film)
             st.success('Film proposed!')
