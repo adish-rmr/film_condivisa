@@ -18,6 +18,21 @@ if select:
     
     # Get current week's film
     current_films = [Film.from_dict(f) for f in catalogue.collection.find({'week_f': True})]
+    # rate 
+    if current_films:
+        film = current_films[0]
+        st.write(f"Rate the film of the week: {film.info['title']}")
+        rate = st.slider('Rate:', 0, 10, 5)
+        if st.button('Submit rate'):
+            film.rate = rate
+            catalogue.collection.update_one(
+                {'info': film.info},
+                {'$set': {f'{select}_rate': rate}}
+            )
+            st.success('Rate submitted!')
+    
+    if select == 'reactorr':
+        st.button('Reset week', on_click=catalogue.reset_week())
     
     if current_films:
         film = current_films[0]
@@ -39,6 +54,9 @@ if select:
     for film in available_films:
         display_info(film.info)
         st.write(f"Proposed by: *{film.proposed_by}*")
+        if select == 'reactorr':
+            if st.button('Set as film of the week'):
+                catalogue.set_week_film(film.info)
 
     # ADD FILM
     st.subheader('Propose a film')
