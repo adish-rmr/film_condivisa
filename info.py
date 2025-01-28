@@ -1,60 +1,55 @@
-from bs4 import BeautifulSoup
 import requests
-import re
-import streamlit as st
 
-
-def get_movie_info(titolo):
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
-    url = 'https://www.imdb.com/find/?q=' + titolo + '%20' + '&ref_=nv_sr_sm'
-
-    response = requests.get(url, headers=headers)
-    soup = BeautifulSoup(response.text, 'html.parser')
-    if soup:
-        print("got page")
-        link = soup.find('a', class_='ipc-metadata-list-summary-item__t', href=lambda href: href and '/title/' in href)
-        image = soup.find("img", class_="ipc-image")
-        image_src = image['src']
-        href = link.get('href')
-        title = link.get_text()
-        title_id = href.split('/title/')[1].split('/')[0]
-
-        info = {
-            "title": title,
-            "image": image_src
-        }
-
-        response = requests.get(f"https://www.imdb.com/title/{title_id}", headers=headers)
-        if response.status_code != 200:
-            print("Error")
-        else:
-            print("got id and info")
-            soup = BeautifulSoup(response.text, 'html.parser')
-            if soup:
-                items = soup.find_all("li", class_="ipc-inline-list__item")
-        if items:
-            print("got items")
-        for i in range(4, 11):
-            info["year"] = items[4].get_text()
-            info["rating"] = items[5].get_text()
-            info["duration"] = items[6].get_text()
-            info["director"] = items[7].get_text()
-            info["writer"] = items[8].get_text()
-            info["with"] = items[9].get_text()
-            info["and"] = items[10].get_text()
-        return info
-
-
-def display_info(info):
-    col1, col2 = st.columns([1,7])
-    with col1:
-        st.text(" ")
-        st.text(" ")
-        st.image(info["image"], use_container_width=True)
-    with col2:
-        st.subheader(info["title"])
-        st.text(f"{info['year']} | {info['rating']} | {info['duration']}")
-        st.text(f"Director: {info['director']}\n"
-                f"Writer: {info['writer']}\n"
-                f"with: {info['with']}\n"
-                f"and: {info['and']}")
+def search_movies(api_key, query):
+    """
+    Search for a movie using TMDB API and return its poster path and full title.
+    
+    Args:
+        api_key (str): Your TMDB API key
+        query (str): Movie title to search for
+    
+    Returns:
+        list: List of dictionaries containing movie information
+    """
+    
+    # TMDB API endpoints
+    base_url = "https://api.themoviedb.org/3"
+    search_endpoint = f"{base_url}/search/movie"
+    image_base_url = "https://image.tmdb.org/t/p/original"
+    
+    # Parameters for the API request
+    params = {
+        'api_key': api_key,
+        'query': query,
+        'language': 'en-US',
+        'page': 1,
+        'include_adult': False
+    }
+    
+    try:
+        # Make the API request
+        response = requests.get(search_endpoint, params=params)
+        response.raise_for_status()  # Raise an exception for bad status codes
+        
+        # Parse the response
+        results = response.json()['results']
+        
+        # Extract relevant information
+        movies = []
+        for movie in results:
+            movie_info = {
+                'title': movie['title'],
+                'original_title': movie.get('original_title', ''),
+                'release_date': movie.get('release_date', ''),
+                'poster_url': f"{image_base_url}{movie['poster_path']}" if movie.get('poster_path') else None
+            }
+            movies.append(movie_info)
+            
+        return movies
+        
+    except requests.exceptions.RequestException as e:
+        print(f"Error making API request: {e}")
+        return []
+    except KeyError as e:
+        print(f"Error parsing response: {e}")
+        return []
