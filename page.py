@@ -1,10 +1,9 @@
 import streamlit as st
 from class_methods import Film
 from info import search_movies
-import datetime as dt
 from pymongo import MongoClient
-import uuid
 
+st.set_page_config(page_title="La Condivisa dei Film", page_icon="📹")
 
 st.title('Film: La :red[Condivisa]')
 
@@ -14,12 +13,12 @@ collection = db['catalogo']
 
 API_KEY = 'df8cf73ddd0a97c1a95b8aefba52afdb'
 
-st.header('Chi sei?')
+st.subheader('Chi sei?')
 userbase = ['PioSan', 'paracetamuoio', 'Luca C.', 'RedWill93', 'NukularCoffee', 'Dolente2', 'reactorr', 'DarthValer', 'Gerardo']
 user = st.selectbox('Select user:', userbase)
 st.session_state['user'] = user
 
-st.header('Proponi un film', divider=True)
+st.header('Proponi un film', divider='red')
 
 lista = []
 titolo = st.text_input('Titolo')
@@ -59,7 +58,7 @@ if film_in_visione:
             {'$set': {f'rating.{user}': rating}}
         )
         
-st.header('Film proposti', divider=True)
+st.header('Film proposti', divider='orange')
 film_proposti = collection.find({'in_visione': False, 'watched': False})
 
 i = 0
@@ -82,7 +81,7 @@ if st.button('Film random') and st.session_state['user'] == 'reactorr':
         collection.update_one({'titolo': film['titolo']}, {'$set': {'in_visione': True}})
         st.success('Film random aggiornato!')
 
-st.header('Vota film', divider=True)
+st.header('Vota film', divider='violet')
 film_visti = collection.find({'watched': True})
 film_visti_list = [film['title'] for film in film_visti]
 film_visti_list = sorted(film_visti_list)
@@ -95,7 +94,7 @@ if st.button('Vota'):
         {'$set': {f'rating.{user}': rating2}}
     )
         
-st.header('Classifica', divider=True)
+st.header('Classifica', divider='green')
 film_rating = collection.find({'rating': {'$exists': True}})
 
 classifica = []
